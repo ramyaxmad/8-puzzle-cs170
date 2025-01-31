@@ -68,10 +68,10 @@ def select_init_alg(puzzle):
     alg = input("(1) Uniform Cost Search\n"
                 "(2) A* with Misplaced Tile heuristic\n"
                 "(3) A* with Manhattan Distance heuristic\n")
-    general_search(puzzle)
+    general_search(puzzle, 0)
 
 
-def general_search(puzzle):
+def general_search(puzzle, heuristic):
     #make initial state a board, then make it a node, then push into queue 
     repeat_states = dict()
     priority_queue = []
