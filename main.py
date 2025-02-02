@@ -39,12 +39,11 @@ class Node:
                 #swap the 0 with the new_i, new_j
                 new_board[x][y], new_board[new_i][new_j] = new_board[new_i][new_j], new_board[x][y]
                 #make a node from the matrix
-                child_node = Node(self, new_board, 0, self.depth+1)
-                print("child cost: ", child_node.depth)
+                child_node = Node(self, new_board, self.cost+1, self.depth+1)
+                print("child depth: ", child_node.cost)
                 #append the new board to the result
                 childrn_nodes.append(child_node)
                 print(new_i, new_j, x, y)
-                print("child")
                 child_node.print_puzzle()
         return childrn_nodes
     #converts board to tuple to put into dict()
@@ -53,14 +52,15 @@ class Node:
     def print_puzzle(self):
         print(np.array(self.board), "\n")
     def misplaced_count(self):
+        # count = sum(1 for i in range(3) for j in range(3) if self.board[i][j] != 0 and self.board[i][j] != goal_State[i][j])
+        # return count
+    
         sum = 0
         for i in range(3):
             for j in range(3):
                 if self.board[i][j] != 0:
                     if self.board[i][j] != goal_State[i][j]:
                         sum += 1
-        self.depth+=sum
-        print("misplaced = ", sum)
         return sum
     #def manhattan_count(self):
 
@@ -76,48 +76,52 @@ class Node:
 #     make a node from the matrix
 #     append the new board to the result
 
-def general_search(puzzle, heuristic):
-    #make initial state a board, then make it a node, then push into queue 
+def general_search(puzzle, heuristic): 
     repeat_states = dict()
     priority_queue = []
-    curr_node= Node(None, puzzle, 0, 0)
+    curr_node= Node(None, puzzle, 0, 0) #make initial state a board, then make it a node, then push into queue
     if heuristic == 1:
         curr_node.misplaced_count()
     # if heuristic == 2:
     #     curr_node.manhattan_count()
-    heapq.heappush(priority_queue, curr_node)
-    #priority_queue.append(curr_node) #push into queue
+    heapq.heappush(priority_queue, curr_node) #push into queue 
 
-    num_expanded_nodes = 0
-    max_queue_size = 0
+    num_pops = 0 #time
+    max_queue_size = 0 #memory
     repeat_states[curr_node.board_to_tuple()] = "repeat"
 
     #loop
     while len(priority_queue):
-        #if theres nothing in the queue return failure
-        #pop first node in the queue
-        curr_node = heapq.heappop(priority_queue)#priority_queue.pop(0)
+        max_queue_size = max(max_queue_size, len(priority_queue))
+        curr_node = heapq.heappop(priority_queue) #pop first node in the queue
+        num_pops += 1
+
+        print("\npop")
         curr_node.print_puzzle()
-        print("\n", curr_node.depth, "\n")
-        #if popped node is goal state return the node 
-        if curr_node.board == goal_State:
-            print("goal state")
+        print("\nDepth:", curr_node.cost, "\n")
+
+        if curr_node.board == goal_State:  #if popped node is goal state return the node 
+            print("Goal state!\n")
+            print("Solution depth: ", curr_node.cost)
+            print("Time (number popped): ", num_pops)
+            print("Memory (Max queue size): ", max_queue_size)
             return
         #expand the children, put them into queue
         children = curr_node.children() #is a list of nodes
         #   iterate through list of nodes
-        #if its in repeat, dont add to queue
+        #if its in repeat, dont add to queue, so do nothing
         #its not in repeat, add to queue and add to repeat
         for c in children:
             if c.board_to_tuple() not in repeat_states:
                 print("added to queue")
-                #if heuristic == 0:
                 if heuristic == 1: #misplaced tile
-                    c.misplaced_count()
-                # or you need to push into queue based on least miisplaced tiles 
+                    c.depth = c.cost + c.misplaced_count()
+                    print("current depth: ", c.cost)
+                    print("misplace = ", c.misplaced_count())
+                    print("f(n): ", c.depth)
                 # if heuristic == 2:
-                #     c.manhattan_count()
-                heapq.heappush(priority_queue, c)#priority_queue.append(c)
+                #     c.depth = c.cost + c.manhattan_count()
+                heapq.heappush(priority_queue, c)
                 repeat_states[c.board_to_tuple()] = "repeat"
             else:
                 print("its a repeat")
@@ -126,6 +130,7 @@ def general_search(puzzle, heuristic):
     return
 
     #end
+
 def select_init_alg(puzzle):
     alg = input("(1) Uniform Cost Search\n"
                 "(2) A* with Misplaced Tile heuristic\n"
@@ -138,6 +143,7 @@ def select_init_alg(puzzle):
         general_search(puzzle, 2)
 
 def main():
+    depth0 = goal_State
     depth2 = [[1,2,3],
               [4,5,6],
               [0,7,8]]
@@ -184,6 +190,7 @@ def main():
         #print("initial_State = ", initial_State)
 
     depth_map = {
+            "0": depth0,
             "2": depth2,
             "4": depth4,
             "8": depth8,
