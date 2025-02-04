@@ -6,8 +6,12 @@ initial_State = []
 goal_State = [[1,2,3],
               [4,5,6],
               [7,8,0]]
+goal_coor = {}
+for r in range (len(goal_State)):
+    for c in range (len(goal_State[0])):
+        goal_coor[goal_State[r][c]] = (r,c)
 
-#Definition for a tree node.
+#print('goal_coor', goal_coor)
 class Node:
     def __init__(self, parent=None, board = None, cost = 0, depth = 0):
         self.board = board
@@ -19,7 +23,7 @@ class Node:
         return self.depth < other.depth
     
     def children(self):
-        directions = [(0,1), (0,-1), (1,0), (-1,0)]
+        directions = [(-1,0), (1,0), (0,1), (0,-1)]
         childrn_nodes = []
         x = 0
         y = 0
@@ -59,32 +63,20 @@ class Node:
                     if self.board[i][j] != goal_State[i][j]:
                         sum += 1
         return sum
+    
     def manhattan_count(self):
         sum_distance = 0
         
         for i in range(3):
             for j in range(3):
                 if self.board[i][j] != 0:
-                    x1 = (self.board[i][j] - 1) // 3 #get row
-                    y1 =  (self.board[i][j] - 1) % 3 #get col
+                    x1, y1 =  goal_coor[self.board[i][j]]
                     distance = abs(i - x1) + abs(j - y1) #sum abs diff in row and col
                     sum_distance += distance
                     #print(f"Tile {self.board[i][j]}: Current ({i},{j}), Goal ({x1},{y1}), Distance = {distance}")
         #print("manhattan: ", sum_distance)
         self.depth = self.cost + sum_distance
-
-
-# directions = [(0,1), (0,-1), (1,0), (-1,0)]
-# find the coordinates for 0, (i, j)
-# for d in directions:
-# new_i = i + d[0]
-# new_j = j + d[1]
-# check if new_i, new_j is in the matrix
-# generate the new board
-#     deep copy the board
-#     swap the 0 with the new_i, new_j
-#     make a node from the matrix
-#     append the new board to the result
+        return sum_distance
 
 def general_search(puzzle, heuristic):
     repeat_states = dict()
@@ -118,6 +110,7 @@ def general_search(puzzle, heuristic):
                 node = node.parent  # Move to parent
             for step, node in enumerate(reversed(solution_path)): # print path in correct order from start to goal
                 #print(f"Step {step}:")
+                #node.manhattan_count()
                 node.print_puzzle()
 
             print("Goal state!\n")
@@ -142,7 +135,6 @@ def general_search(puzzle, heuristic):
                     #c.depth = c.cost + c.manhattan_count()
                     c.manhattan_count()
                     #print("current depth: ", c.cost)
-                    #print("manhattan = ", c.manhattan_count())
                     #print("f(n): ", c.depth)
                 heapq.heappush(priority_queue, c)
                 repeat_states[c.board_to_tuple()] = "repeat"
@@ -168,6 +160,18 @@ def select_init_alg(puzzle):
 
 def main():
     depth0 = goal_State
+    easy = [[1,2,0],
+            [4,5,3],
+            [7,8,6]]
+    very_easy = [[1,2,3],
+                 [4,5,6],
+                 [7,0,8]]
+    doable = [[0,1,2],
+              [4,5,3],
+              [7,8,6]]
+    oh_boy = [[8,7,1],
+              [6,0,2],
+              [5,4,3]]
     depth2 = [[1,2,3],
               [4,5,6],
               [0,7,8]]
@@ -189,6 +193,9 @@ def main():
     depth24 = [[0,7,2],
                [4,6,1],
                [3,5,8]]
+    bonus = [[1,6,7],
+             [5,0,3],
+             [4,8,2]]
 
 
     print("Welcome to Ramya's 8-Puzzle.")
@@ -213,6 +220,10 @@ def main():
         #print("initial_State = ", initial_State)
 
     depth_map = {
+            "a" : easy,
+            "b": very_easy,
+            "c": doable,
+            "d": oh_boy,
             "0": depth0,
             "2": depth2,
             "4": depth4,
@@ -220,11 +231,12 @@ def main():
             "12": depth12,
             "16": depth16,
             "20": depth20,
-            "24": depth24
+            "24": depth24,
+            "bonus": bonus
         }
 
     if choose == "1":
-        start = input("Enter # 0, 2, 4, 8, 12, 16, 20, or 24 for depth: \n")
+        start = input("Enter # 0, 2, 4, 8, 12, 16, 20, or 24 for depth: You can also enter a, b, c, d, bonus\n")
         initial_State = depth_map.get(start)
 
     #print(initial_State)
